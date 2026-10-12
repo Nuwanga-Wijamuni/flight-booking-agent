@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from . import database as db
 from .agent import graph
 from .config import settings
+from .llm import AIError
 from .models import Search, Offer, Quote, ChatRequest, QuoteRequest, BookingRequest
 from .providers import search, refresh, now
 
@@ -32,7 +33,7 @@ def remember(offers):
 
 @app.get('/api/health')
 def health():
-    return {'status': 'ok', 'provider': settings.flight_provider, 'ai': 'gemini' if settings.gemini_api_key else 'demo', 'real_booking_enabled': False}
+    return {'status': 'ok', 'provider': settings.flight_provider, 'ai': 'groq' if settings.groq_api_key.get_secret_value() else 'demo', 'ai_model': settings.groq_model if settings.groq_api_key.get_secret_value() else None, 'real_booking_enabled': False}
 
 
 @app.post('/api/search')
@@ -53,6 +54,8 @@ async def chat(request: ChatRequest):
         result = await graph.ainvoke({'message': request.message, 'offers': []})
         remember(result.get('offers', []))
         return result
+    except AIError as exc:
+        raise HTTPException(exc.status_code, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except Exception as exc:

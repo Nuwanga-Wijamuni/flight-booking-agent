@@ -6,6 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white)](backend/requirements.txt)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](backend/app/main.py)
+[![Groq](https://img.shields.io/badge/Groq-GPT--OSS_120B-F55036?style=flat-square)](https://console.groq.com/docs/model/openai/gpt-oss-120b)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=flat-square)](backend/app/agent.py)
 [![React](https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white)](frontend/package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](frontend/src/App.tsx)
@@ -19,7 +20,7 @@
 
 ## Meet Skyward
 
-Turn a travel request into flight options, inspect an itinerary, and walk through a simulated booking—all in one interface. Start with the built-in demo, then connect Gemini for natural-language extraction or Duffel for sandbox searches.
+Turn a travel request into flight options, inspect an itinerary, and walk through a simulated booking—all in one interface. Start with the built-in demo, then connect Groq for natural-language extraction or Duffel for sandbox searches.
 
 > **Demo & sandbox project**
 >
@@ -37,7 +38,7 @@ Turn a travel request into flight options, inspect an itinerary, and walk throug
 | 💾 | **Keep your results** | Persist offers, quotes, and simulated bookings with SQLite or PostgreSQL. |
 | 🧑‍💻 | **Develop in VS Code** | Open the included workspace and start both services with prepared tasks. |
 
-**Current scope:** one way · one adult · economy in the search form. The offline parser also recognizes business; Gemini can extract additional supported cabins. USD budgets filter USD offers only—there is no exchange-rate conversion.
+**Current scope:** one way · one adult · economy in the search form. The offline parser also recognizes business; Groq can extract additional supported cabins. USD budgets filter USD offers only—there is no exchange-rate conversion.
 
 ## Quick start
 
@@ -46,8 +47,8 @@ Turn a travel request into flight options, inspect an itinerary, and walk throug
 ### 1. Get the project
 
 ```bash
-git clone https://github.com/Nuwanga-Wijamuni/flight-agent.git
-cd flight-agent
+git clone https://github.com/Nuwanga-Wijamuni/flight-booking-agent.git
+cd flight-booking-agent
 code flight-agent.code-workspace
 ```
 
@@ -118,9 +119,19 @@ The default assistant uses a deterministic parser with LangGraph. It recognizes 
 
 City aliases: **Colombo, Singapore, Dubai, London, Paris, Bangkok, Tokyo, Sydney, Amsterdam, Frankfurt**. Three-letter IATA airport codes also work.
 
-It asks for clarification when required details are missing or it detects unsupported trip types. Requests are stateless: each message should contain the complete trip. Enable Gemini for more flexible language extraction.
+It asks for clarification when required details are missing or it detects unsupported trip types. Requests are stateless: each message should contain the complete trip. Enable Groq for more flexible language extraction.
 
 </details>
+
+## Record your portfolio demo
+
+1. Configure Groq as above; optionally enable Duffel sandbox below.
+2. Start the backend and frontend, and open the app.
+3. Enter a full one-way request for one adult with a future date.
+4. Compare results, review an offer, and confirm the simulated booking.
+5. Keep the sandbox/simulation notice visible. A `SIM-` reference is a local record, not a Duffel order or airline ticket.
+
+This version is stateless: include the complete trip in each message. It does not yet handle conversational follow-ups, real payments, or Duffel order creation.
 
 ## How it works
 
@@ -142,7 +153,7 @@ flowchart TD
     Booking --> DB[("SQLite / PostgreSQL")]
 ```
 
-Gemini, when enabled, extracts structured search parameters. LangGraph routes the request into a provider search. Backend code validates requests and controls quote expiry, confirmation, and simulation records. The model has no payment or booking tool.
+Groq, when enabled, extracts structured search parameters. LangGraph routes the request into a provider search. Backend code validates requests and controls quote expiry, confirmation, and simulation records. The model has no payment or booking tool.
 
 ### Technology stack
 
@@ -150,23 +161,25 @@ Gemini, when enabled, extracts structured search parameters. LangGraph routes th
 | --- | --- |
 | **Interface** | React 19 · TypeScript · Vite · CSS |
 | **API & validation** | Python · FastAPI · Pydantic · HTTPX |
-| **Agent workflow** | LangGraph · optional Gemini structured output |
+| **Agent workflow** | LangGraph · Groq GPT-OSS 120B · strict structured output |
 | **Flight provider** | Built-in demo inventory · optional Duffel test API |
 | **Persistence** | SQLAlchemy · SQLite by default · optional PostgreSQL |
 | **Developer tools** | pytest · VS Code workspace/tasks · Docker Compose for PostgreSQL |
 
 ## Choose your mode
 
-The AI and flight provider are configured independently. You can use Gemini with demo flights, or the offline parser with Duffel sandbox searches.
+The AI and flight provider are configured independently. You can use Groq with demo flights, or the offline parser with Duffel sandbox searches.
 
 | Setting | Default | Optional integration |
 | --- | --- | --- |
-| **Trip extraction** | Offline parser; no key needed | Gemini with `GEMINI_API_KEY` |
+| **Trip extraction** | Offline parser; no key needed | Groq with `GROQ_API_KEY` |
 | **Flight search** | Illustrative demo flights | Duffel sandbox with a test token |
 | **Storage** | Local SQLite | PostgreSQL |
 | **Booking outcome** | Local simulation | Remains a local simulation in every mode |
 
 ## Configuration
+
+For an existing Gemini setup, replace the `GEMINI_API_KEY` / `GEMINI_MODEL` entries with the Groq variables below. Old Gemini variables are ignored.
 
 Create `backend/.env` from [`.env.example`](backend/.env.example). Restart the backend after changing it. Keep API keys in `.env`; that file is excluded from Git.
 
@@ -174,17 +187,27 @@ Create `backend/.env` from [`.env.example`](backend/.env.example). Restart the b
 | --- | --- |
 | `FLIGHT_PROVIDER` | `demo`; change to `duffel_test` for sandbox searches |
 | `DUFFEL_ACCESS_TOKEN` | Empty; a Duffel **test** token is required for sandbox mode |
-| `GEMINI_API_KEY` | Empty; setting it enables Gemini extraction |
-| `GEMINI_MODEL` | `gemini-2.5-flash`; use a model supporting structured output |
+| `GROQ_API_KEY` | Empty; setting it enables Groq extraction |
+| `GROQ_MODEL` | `openai/gpt-oss-120b`; use a model supporting structured output |
 | `DATABASE_URL` | `sqlite:///./flight_agent.db` |
 | `CORS_ORIGIN` | `http://localhost:5173` |
 
 <details>
-<summary><strong>Enable Gemini</strong></summary>
+<summary><strong>Enable Groq</strong></summary>
 
-Set `GEMINI_API_KEY` in `backend/.env` and restart the backend. Request text is sent to Google for extraction; use invented travel requests during testing and avoid entering passport or payment information.
+Set these values in `backend/.env` and restart the backend:
 
-See [Gemini structured output documentation](https://ai.google.dev/gemini-api/docs/structured-output).
+```dotenv
+GROQ_API_KEY=your_new_groq_key_here
+GROQ_MODEL=openai/gpt-oss-120b
+FLIGHT_PROVIDER=demo
+```
+
+The UI will show **GPT-OSS-120B · Groq + LangGraph**. The badge indicates configuration; a successful chat request verifies that the key works. No OpenAI API key or additional Groq SDK is needed: the backend uses HTTPX. Leave `GROQ_API_KEY` empty for the offline parser. Never put secrets in `VITE_` variables, screenshots, recordings, or commits.
+
+If Groq fails, the app displays an error and you can still use the flight search form. It does not silently substitute the offline parser. HTTP 429 means wait and retry; access errors mean check your Groq key and model permissions. Request text is sent to Groq for extraction; use invented travel requests during testing and avoid entering passport or payment information.
+
+See [Groq structured output documentation](https://console.groq.com/docs/structured-outputs).
 
 </details>
 
@@ -228,6 +251,7 @@ The supplied credentials are for local development. Tables are created on startu
 | Path | Responsibility |
 | --- | --- |
 | [`backend/app/agent.py`](backend/app/agent.py) | LangGraph extraction and search flow |
+| [`backend/app/llm.py`](backend/app/llm.py) | Groq structured extraction, validation, and API errors |
 | [`backend/app/providers.py`](backend/app/providers.py) | Demo offers and Duffel sandbox adapter |
 | [`backend/app/main.py`](backend/app/main.py) | Search, quotes, confirmation, and simulations |
 | [`backend/app/models.py`](backend/app/models.py) | Validated requests and response models |
@@ -251,18 +275,21 @@ python -m pytest -q
 npm run build
 ```
 
-The initial implementation passed **5 backend tests** and the **TypeScript/Vite production build**. Tests cover search and budget filtering, confirmation, duplicate protection, quote expiry, clarification, invalid trips, and live-token rejection.
+**Verified for this upgrade:** 24 backend tests pass and the TypeScript/Vite production build succeeds.
 
-Gemini and Duffel integrations have not been tested against a provider account. PostgreSQL and a full browser walkthrough have not been verified. These results describe the initial local checks, not continuous-integration status.
+Tests cover search and budget filtering, confirmation, duplicate protection, quote expiry, clarification, invalid trips, and live-token rejection. Groq contract tests use mocked HTTP responses and cover strict request schemas, extraction through booking simulation, invalid output, rate limits, access errors, and network failures.
+
+Groq and Duffel integrations have not been tested against a provider account. PostgreSQL and a full browser walkthrough have not been verified. Mocked tests verify application behavior; they do not prove account credentials or provider availability.
 
 ## Roadmap
 
 - [x] React interface with chat and structured search
 - [x] LangGraph extraction → search workflow
+- [x] Groq GPT-OSS 120B with strict structured output and sanitized errors
 - [x] Demo inventory and Duffel sandbox adapter
 - [x] Expiring quotes and booking simulation
 - [x] Database-backed duplicate protection
-- [ ] Verify Gemini, Duffel, and PostgreSQL with configured services
+- [ ] Verify Groq, Duffel, and PostgreSQL with configured services
 - [ ] Add browser end-to-end tests
 - [ ] Support return trips, multiple passengers, and passenger forms
 - [ ] Add user authentication and per-user record access
